@@ -12,7 +12,7 @@ import sys
 # Find what subreddit you want to watch, and how deep you dare to go
 depth = 0
 if len(sys.argv) == 1:
-    print("No subbreddit entered as argument.")
+    print("No subreddit entered as argument.")
     subreddit = input("Enter subreddit name: ")
 elif len(sys.argv) == 2:
     subreddit = sys.argv[1]
@@ -75,8 +75,10 @@ def getytlinks(link):
     for link in soup.find_all('a'):
         links.append(str(link.get('href')))
 
+    # Pick out youtube links
     new_links = list(sorted(set(filter(re.compile("^https://youtu.be").match, links))))
     new_links += list(sorted(set(filter(re.compile("^https://www.youtube.com").match, links))))
+    # in principal, add anything here you want. I guess all of these should work: https://rg3.github.io/youtube-dl/supportedsites.html
     return new_links, links
 
 new_links, links = getytlinks(subreddit_link)

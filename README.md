@@ -10,9 +10,9 @@ Python modules: pickle, bs4, urllib3, certifi; Player: mpv
 
 Run by
 ```
-$ python3 reddytt.py [subredditname]
+$ python3 reddytt.py [subredditname] [depth]
 ```
-note that `[subredditname]` is just the name, e.g. `deepintoyoutube` not `r/deepintoyoutube` or anything else.
+note that `[subredditname]` is just the name, e.g. `deepintoyoutube` not `r/deepintoyoutube` or anything else. The integer `[depth]` measures how many pages into the subreddit you wish to go.
 
 It saves seen videos to `~/.reddytt/[subreddit]/seen` and a list of unseen videos to `~/.reddytt/[subreddit]/unseen` (using pickle).
 
