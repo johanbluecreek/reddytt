@@ -9,18 +9,41 @@ import re
 
 import sys
 
-#TODO: Make the seen/unseen be subreddit dependent.
+# Find what subreddit you want to watch:
+if len(sys.argv) == 1:
+    print("No subbreddit entered as argument.")
+    subreddit = input("Enter subreddit name: ")
+elif len(sys.argv) == 2:
+    subreddit = sys.argv[1]
+else:
+    #TODO: the next argument should be how many pages of the subreddit one should browse.
+    subreddit = sys.argv[1]
+
+subreddit_link = "https://reddit.com/r/" + subreddit
 
 # Setup working directory
 work_dir = os.environ['HOME'] + "/.reddytt"
-seen_file = work_dir + "/seen"
+sr_dir = work_dir + "/%s" % subreddit
+seen_file = sr_dir + "/seen"
 seen_links = []
-unseen_file = work_dir + "/unseen"
+unseen_file = sr_dir + "/unseen"
 unseen_links = []
 print("Checking for reddytt working directory (%s)." % work_dir)
 if not os.path.isdir(work_dir):
     print("Working directory not found. Creating %s, and files." % work_dir)
     os.mkdir(work_dir)
+    os.mkdir(sr_dir)
+    os.system("touch %s" % seen_file)
+    f = open(seen_file, 'wb')
+    pickle.dump(seen_links, f)
+    f.close()
+    os.system("touch %s" % unseen_file)
+    f = open(unseen_file, 'wb')
+    pickle.dump(unseen_links, f)
+    f.close()
+elif not os.path.isdir(sr_dir):
+    print("Working directory found, but no subreddit directoy. Creating %s, and files." % sr_dir)
+    os.mkdir(sr_dir)
     os.system("touch %s" % seen_file)
     f = open(seen_file, 'wb')
     pickle.dump(seen_links, f)
@@ -38,16 +61,9 @@ else:
     unseen_links = pickle.load(f)
     f.close()
 
-# Read subreddit from input
-#TODO: Unless given as argument...
-#subreddit = input("Enter subreddit name: ")
-# Hard-coding for dev-purposes:
-subreddit = "deepintoyoutube"
-subreddit = "https://reddit.com/r/" + subreddit
-
 # Get and parse out the links
 pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
-html_page = pm.request('GET', subreddit)
+html_page = pm.request('GET', subreddit_link)
 soup = BeautifulSoup(html_page.data, "lxml")
 links = []
 for link in soup.find_all('a'):
@@ -56,10 +72,11 @@ new_links = list(sorted(set(filter(re.compile("^https://youtu.be").match, links)
 new_links += list(sorted(set(filter(re.compile("^https://www.youtube.com").match, links))))
 # we also want to watch the stored ones
 new_links += unseen_links
+new_links = list(sorted(set(new_links)))
 
 # Start watching
 save_links = new_links
-for link in new_links[0:2]:
+for link in new_links:
     if link in seen_links:
         print("Link seen. Skipping.")
     else:
