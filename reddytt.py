@@ -9,15 +9,20 @@ import re
 
 import sys
 
-# Find what subreddit you want to watch:
+# Find what subreddit you want to watch, and how deep you dare to go
+depth = 0
 if len(sys.argv) == 1:
     print("No subbreddit entered as argument.")
     subreddit = input("Enter subreddit name: ")
 elif len(sys.argv) == 2:
     subreddit = sys.argv[1]
 else:
-    #TODO: the next argument should be how many pages of the subreddit one should browse.
     subreddit = sys.argv[1]
+    try:
+        depth = int(sys.argv[2])
+    except:
+        print("Second argument, 'depth', must be an integer. Exiting.")
+        sys.exit()
 
 subreddit_link = "https://reddit.com/r/" + subreddit
 
@@ -42,7 +47,7 @@ if not os.path.isdir(work_dir):
     pickle.dump(unseen_links, f)
     f.close()
 elif not os.path.isdir(sr_dir):
-    print("Working directory found, but no subreddit directoy. Creating %s, and files." % sr_dir)
+    print("Working directory found, but no subreddit directory. Creating %s, and files." % sr_dir)
     os.mkdir(sr_dir)
     os.system("touch %s" % seen_file)
     f = open(seen_file, 'wb')
@@ -62,14 +67,31 @@ else:
     f.close()
 
 # Get and parse out the links
-pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
-html_page = pm.request('GET', subreddit_link)
-soup = BeautifulSoup(html_page.data, "lxml")
-links = []
-for link in soup.find_all('a'):
-    links.append(str(link.get('href')))
-new_links = list(sorted(set(filter(re.compile("^https://youtu.be").match, links))))
-new_links += list(sorted(set(filter(re.compile("^https://www.youtube.com").match, links))))
+def getytlinks(link):
+    pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
+    html_page = pm.request('GET', link)
+    soup = BeautifulSoup(html_page.data, "lxml")
+    links = []
+    for link in soup.find_all('a'):
+        links.append(str(link.get('href')))
+
+    new_links = list(sorted(set(filter(re.compile("^https://youtu.be").match, links))))
+    new_links += list(sorted(set(filter(re.compile("^https://www.youtube.com").match, links))))
+    return new_links, links
+
+new_links, links = getytlinks(subreddit_link)
+
+# Go deeper
+if depth > 0:
+    for d in range(depth):
+        link = ""
+        for l in links:
+            if re.search("after=", l):
+                link = l
+        newer_links, links = getytlinks(link)
+        new_links += newer_links
+        new_links = list(sorted(set(new_links)))
+
 # we also want to watch the stored ones
 new_links += unseen_links
 new_links = list(sorted(set(new_links)))
@@ -89,6 +111,7 @@ for link in new_links:
         elif x == 1024:
             # You made a hard exit, and want to stop. (Ctrl+C)
             # Store the links and exit the program.
+            print("Forced exit detected. Saving and exiting.")
             f = open(seen_file, 'wb')
             pickle.dump(seen_links, f)
             f.close()
