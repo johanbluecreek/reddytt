@@ -9,6 +9,9 @@ import re
 
 import sys
 
+# cheers to https://stackoverflow.com/a/952952
+flatten = lambda l: [item for sublist in l for item in sublist]
+
 # Find what subreddit you want to watch, and how deep you dare to go
 depth = 0
 if len(sys.argv) == 1:
@@ -77,7 +80,15 @@ def getytlinks(link):
 
     # Pick out youtube links
     new_links = list(sorted(set(filter(re.compile("^https://youtu.be").match, links))))
-    new_links += list(sorted(set(filter(re.compile("^https://www.youtube.com").match, links))))
+    newer_links = list(sorted(set(filter(re.compile("^https://www.youtube.com/watch").match, links))))
+    # the youtube.com links are not always well formatted for mpv, so we reformat them:
+    for lk in newer_links:
+        deconstructed_link = flatten(list(map(lambda x: x.split('&'), lk.split('?'))))
+        videolabel = ""
+        for part in deconstructed_link:
+            if re.search("^v=", part):
+                videolabel = part
+        new_links.append(deconstructed_link[0] + "?" + videolabel)
     # in principal, add anything here you want. I guess all of these should work: https://rg3.github.io/youtube-dl/supportedsites.html
     return new_links, links
 
@@ -104,7 +115,7 @@ for link in new_links:
     if link in seen_links:
         print("Link seen. Skipping.")
     else:
-        x = os.system("mpv %s" % link)
+        x = os.system("mpv -fs %s" % link)
         if x == 0:
             # The video finished or you hit 'q' (or whatever your binding is), this is a good exit.
             # Store the video in seen_links.
