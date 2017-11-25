@@ -51,11 +51,11 @@ def getytlinks(link):
 
 if __name__ == '__main__':
 
-    parser = ap.ArgumentParser(usage='%(prog)s <subreddit> [options] [-- [mpv-arguments]]', description='Play the youtube links from your favourite subreddit.')
+    parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links from your favourite subreddit.')
 
-    parser.add_argument('subreddit', type=str, help='The subreddit you want to play.')
     parser.add_argument('--depth', metavar='d', type=int, default=0, help='How many pages into the subreddit you want to go.')
-    parser.add_argument('mpv', default="", nargs=ap.REMAINDER, help='Remaining arguments passed to `mpv`.')
+    parser.add_argument('subreddit', type=str, help='The subreddit you want to play.')
+    parser.add_argument('mpv', nargs=ap.REMAINDER, help='Arguments to pass to `mpv`.')
 
     args = parser.parse_args()
 
