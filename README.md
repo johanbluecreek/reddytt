@@ -1,32 +1,33 @@
 # Reddytt
 
-A silly little python script to play and save subreddit youtube-links from the command line (with mpv).
+Do you also find yourself not being able to waste time on reddit efficiently enough? With this silly little script you can get rid off that unnecessary time spent on reading titles thinking "is this really the video I want to watch?", clicking on links, clicking your way to the next page, etcetera, etcetera. `reddytt.py` will take care of that for you. It will start showing you videos (youtube) taken from your favourite subreddit, just the first page or deeper if you want, until all links are consumed and you are faced with reality once again.
 
 ## Dependencies
 
-Python modules: pickle, bs4, urllib3, certifi; Player: mpv
+Python modules: pickle, bs4, urllib3, certifi, argparse; Player: mpv
+
+That is, if you get an error running the script, try installing all of those.
 
 ## Usage
 
-Run by
+Short version, take a look at
 ```
-$ python3 reddytt.py [subredditname] [depth]
+$ ./reddytt.py -h
 ```
-note that `[subredditname]` is just the name, e.g. `deepintoyoutube` not `r/deepintoyoutube` or anything else. The integer `[depth]` measures how many pages into the subreddit you wish to go.
+
+The long version,
+```
+$ ./reddytt.py [options] <subreddit> [-- [mpv-arguments]]
+```
+note that `<subreddit>` is just the name, e.g. `deepintoyoutube` not `r/deepintoyoutube` or anything else. The option available to you is `--depth d` which takes you `d` steps beyond the first page of the subreddit. All arguments following those are given to `mpv`.
+
+Example,
+```
+$ ./reddytt.py --depth 2 deepintoyoutube -- --fs
+```
 
 It saves seen videos to `~/.reddytt/[subreddit]/seen` and a list of unseen videos to `~/.reddytt/[subreddit]/unseen` (using pickle).
 
 ## Notes
 
-It has only been tried with
-
-* "deepintoyoutube" subreddit
-* linux (gentoo)
-* python3
-
-it has not been tried with
-
-* a non-existent subreddit
-* any malicious input
-
-No warranty that anything will work, or that it won't destroy your system.
+This has not been tested with any malicious input. No warranty that anything will work, or that it won't destroy your system.
