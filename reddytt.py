@@ -109,9 +109,12 @@ if __name__ == '__main__':
             for l in links:
                 if re.search("after=", l):
                     link = l
-            newer_links, links = getytlinks(link)
-            new_links += newer_links
-            new_links = list(set(new_links))
+            if link == "":
+                print("Reddytt: Could not identify 'after'-variable to progress deeper.")
+            else:
+                newer_links, links = getytlinks(link)
+                new_links += newer_links
+                new_links = list(set(new_links))
 
     # we also want to watch the stored ones
     new_links += unseen_links
