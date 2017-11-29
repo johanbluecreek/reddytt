@@ -6,7 +6,7 @@ Do you also find yourself not being able to waste time on reddit efficiently eno
 
 Python modules: pickle, bs4, urllib3, certifi, argparse, lxml; Player: mpv
 
-These dependencies using the command `pip install -r requirements.txt`.
+These dependencies can be installed using the command `pip install -r requirements.txt`, or possibly your system package manager.
 
 ## Usage
 
