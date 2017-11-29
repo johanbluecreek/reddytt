@@ -4,9 +4,9 @@ Do you also find yourself not being able to waste time on reddit efficiently eno
 
 ## Dependencies
 
-Python modules: pickle, bs4, urllib3, certifi, argparse; Player: mpv
+Python modules: pickle, bs4, urllib3, certifi, argparse, lxml; Player: mpv
 
-That is, if you get an error running the script, try installing all of those.
+These dependencies are also documented in `requirements.txt`.
 
 ## Usage
 
