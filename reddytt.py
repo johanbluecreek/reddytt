@@ -27,9 +27,7 @@ def getytlinks(link):
     pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
     html_page = pm.request('GET', link)
     soup = BeautifulSoup(html_page.data, "lxml")
-    links = []
-    for link in soup.find_all('a'):
-        links.append(str(link.get('href')))
+    links = [a.get('href') for a in soup('a') if a.get('href')]
 
     # Pick out youtube links
     new_links = list(set(filter(re.compile("^https://youtu\.be").match, links)))
