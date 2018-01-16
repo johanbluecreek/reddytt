@@ -35,6 +35,9 @@ def getytlinks(link):
     # the youtube.com links are not always well formatted for mpv, so we reformat them:
     for lk in newer_links:
         videolabel = re.search('v=([^&?]*)', lk)[1]
+        if videolabel is None:
+            print('Reddytt: skipping URL without video label:', lk)
+            continue
         new_links.append('https://www.youtube.com/watch?v=' + videolabel)
     # in principal, add anything here you want. I guess all of these should work: https://rg3.github.io/youtube-dl/supportedsites.html
     return new_links, links
