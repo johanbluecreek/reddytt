@@ -34,12 +34,8 @@ def getytlinks(link):
     newer_links = [x for x in links if re.match("^https://www\.youtube\.com/watch", x)]
     # the youtube.com links are not always well formatted for mpv, so we reformat them:
     for lk in newer_links:
-        deconstructed_link = flatten(list(map(lambda x: x.split('&'), lk.split('?'))))
-        videolabel = ""
-        for part in deconstructed_link:
-            if re.search("^v=", part):
-                videolabel = part
-        new_links.append(deconstructed_link[0] + "?" + videolabel)
+        videolabel = re.search('v=([^&?]*)', lk)[1]
+        new_links.append('https://www.youtube.com/watch?v=' + videolabel)
     # in principal, add anything here you want. I guess all of these should work: https://rg3.github.io/youtube-dl/supportedsites.html
     return new_links, links
 
