@@ -35,7 +35,7 @@ def getytlinks(link):
     newer_links = [x for x in links if re.match("^https://www\.youtube\.com/watch", x)]
     # the youtube.com links are not always well formatted for mpv, so we reformat them:
     for lk in newer_links:
-        videolabel = re.search('v=([^&?]*)', lk)[1]
+        videolabel = re.search('v=([^&?]*)', lk).group(1)
         if videolabel is None:
             print('Reddytt: skipping URL without video label:', lk)
             continue
