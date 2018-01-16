@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import urllib3
 import certifi
 import re
+import subprocess
 import sys
 import argparse as ap
 #from argparse import ArgumentParser, REMINDER
@@ -58,7 +59,6 @@ if __name__ == '__main__':
 
     subreddit = args.subreddit
     depth = args.depth
-    mpv = " ".join(args.mpv)
 
     subreddit_link = "https://reddit.com/r/" + subreddit
 
@@ -123,14 +123,15 @@ if __name__ == '__main__':
         if link in seen_links:
             print("Reddytt: Link seen. Skipping.")
         else:
-            x = os.system("mpv %(args)s %(link)s" % {"link": link, "args": mpv})
+            p = subprocess.Popen(['mpv', link] + args.mpv, shell=False)
+            p.communicate()
             print("Reddytt: That was: %s" % link)
-            if x == 0:
+            if p.returncode == 0:
                 # The video finished or you hit 'q' (or whatever your binding is), this is a good exit.
                 # Store the video in seen_links.
                 seen_links.append(link)
                 save_links.remove(link)
-            elif x == 1024:
+            elif p.returncode == 4:
                 # You made a hard exit, and want to stop. (Ctrl+C)
                 # Store the links and exit the program.
                 print("Reddytt: Forced exit detected. Saving and exiting.")
