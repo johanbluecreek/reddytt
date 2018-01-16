@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 ################
 # Imports
@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import urllib3
 import certifi
 import re
+import subprocess
 import sys
 import argparse as ap
 #from argparse import ArgumentParser, REMINDER
@@ -27,21 +28,18 @@ def getytlinks(link):
     pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
     html_page = pm.request('GET', link)
     soup = BeautifulSoup(html_page.data, "lxml")
-    links = []
-    for link in soup.find_all('a'):
-        links.append(str(link.get('href')))
+    links = [a.get('href') for a in soup('a') if a.get('href')]
 
     # Pick out youtube links
-    new_links = list(set(filter(re.compile("^https://youtu\.be").match, links)))
-    newer_links = list(set(filter(re.compile("^https://www\.youtube\.com/watch").match, links)))
+    new_links = [x for x in links if re.match("^https://youtu\.be", x)]
+    newer_links = [x for x in links if re.match("^https://www\.youtube\.com/watch", x)]
     # the youtube.com links are not always well formatted for mpv, so we reformat them:
     for lk in newer_links:
-        deconstructed_link = flatten(list(map(lambda x: x.split('&'), lk.split('?'))))
-        videolabel = ""
-        for part in deconstructed_link:
-            if re.search("^v=", part):
-                videolabel = part
-        new_links.append(deconstructed_link[0] + "?" + videolabel)
+        videolabel = re.search('v=([^&?]*)', lk).group(1)
+        if videolabel is None:
+            print('Reddytt: skipping URL without video label:', lk)
+            continue
+        new_links.append('https://www.youtube.com/watch?v=' + videolabel)
     # in principal, add anything here you want. I guess all of these should work: https://rg3.github.io/youtube-dl/supportedsites.html
     return new_links, links
 
@@ -61,7 +59,6 @@ if __name__ == '__main__':
 
     subreddit = args.subreddit
     depth = args.depth
-    mpv = " ".join(args.mpv)
 
     subreddit_link = "https://reddit.com/r/" + subreddit
 
@@ -126,14 +123,15 @@ if __name__ == '__main__':
         if link in seen_links:
             print("Reddytt: Link seen. Skipping.")
         else:
-            x = os.system("mpv %(args)s %(link)s" % {"link": link, "args": mpv})
+            p = subprocess.Popen(['mpv', link] + args.mpv, shell=False)
+            p.communicate()
             print("Reddytt: That was: %s" % link)
-            if x == 0:
+            if p.returncode == 0:
                 # The video finished or you hit 'q' (or whatever your binding is), this is a good exit.
                 # Store the video in seen_links.
                 seen_links.append(link)
                 save_links.remove(link)
-            elif x == 1024:
+            elif p.returncode == 4:
                 # You made a hard exit, and want to stop. (Ctrl+C)
                 # Store the links and exit the program.
                 print("Reddytt: Forced exit detected. Saving and exiting.")
