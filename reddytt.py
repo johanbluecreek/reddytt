@@ -30,8 +30,8 @@ def getytlinks(link):
     links = [a.get('href') for a in soup('a') if a.get('href')]
 
     # Pick out youtube links
-    new_links = list(set(filter(re.compile("^https://youtu\.be").match, links)))
-    newer_links = list(set(filter(re.compile("^https://www\.youtube\.com/watch").match, links)))
+    new_links = [x for x in links if re.match("^https://youtu\.be", x)]
+    newer_links = [x for x in links if re.match("^https://www\.youtube\.com/watch", x)]
     # the youtube.com links are not always well formatted for mpv, so we reformat them:
     for lk in newer_links:
         deconstructed_link = flatten(list(map(lambda x: x.split('&'), lk.split('?'))))
