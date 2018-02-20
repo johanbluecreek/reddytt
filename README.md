@@ -1,6 +1,6 @@
 # Reddytt
 
-Do you also find yourself not being able to waste time on reddit efficiently enough? With this silly little script you can get rid off that unnecessary time spent on reading titles thinking "is this really the video I want to watch?", clicking on links, clicking your way to the next page, etcetera, etcetera. `reddytt.py` will take care of that for you. It will start showing you videos (youtube) taken from your favourite subreddit, just the first page or deeper if you want, until all links are consumed and you are faced with reality once again.
+Do you also find yourself not being able to waste time on reddit efficiently enough? With this silly little script you can get rid off that unnecessary time spent on reading titles thinking "is this really the video I want to watch?", clicking on links, clicking your way to the next page, etcetera, etcetera. `reddytt.py` will take care of that for you. It will start showing you videos taken from your favourite subreddit, just the first page or deeper if you want, until all links are consumed and you are faced with reality once again.
 
 ## Dependencies
 
@@ -29,6 +29,14 @@ $ ./reddytt.py --depth 2 deepintoyoutube -- --fs
 ```
 
 It saves seen videos to `~/.reddytt/[subreddit]/seen` and a list of unseen videos to `~/.reddytt/[subreddit]/unseen` (using pickle).
+
+## Supported sites
+
+The following domains are supported by `reddytt.py`
+
+ * `youtu.be`
+ * `youtube.com/watch`
+ * `clips.twitch.tv`
 
 ## Notes
 
