@@ -24,7 +24,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 # cheers to https://stackoverflow.com/a/952952
 
 # Get and parse out links
-def getytlinks(link):
+def getlinks(link):
     pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
     html_page = pm.request('GET', link)
     soup = BeautifulSoup(html_page.data, "lxml")
@@ -40,7 +40,15 @@ def getytlinks(link):
             print('Reddytt: skipping URL without video label:', lk)
             continue
         new_links.append('https://www.youtube.com/watch?v=' + videolabel)
-    # in principal, add anything here you want. I guess all of these should work: https://rg3.github.io/youtube-dl/supportedsites.html
+
+    # Pick out clips.twitch.tv links
+    for lk in links:
+        if re.match("^https://clips\.twitch\.tv/", lk):
+            new_links.append(lk)
+
+    # In principle, add anything here you want. I guess all of these should
+    # work: https://rg3.github.io/youtube-dl/supportedsites.html
+
     return new_links, links
 
 ################
@@ -49,7 +57,7 @@ def getytlinks(link):
 
 if __name__ == '__main__':
 
-    parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links from your favourite subreddit.')
+    parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links/twitch clips from your favourite subreddit.')
 
     parser.add_argument('--depth', metavar='d', type=int, default=0, help='How many pages into the subreddit you want to go.')
     parser.add_argument('subreddit', type=str, help='The subreddit you want to play.')
@@ -97,7 +105,7 @@ if __name__ == '__main__':
         with open(unseen_file, 'rb') as f:
             unseen_links = pickle.load(f)
 
-    new_links, links = getytlinks(subreddit_link)
+    new_links, links = getlinks(subreddit_link)
 
     # Go deeper
     if depth > 0:
@@ -109,7 +117,7 @@ if __name__ == '__main__':
             if link == "":
                 print("Reddytt: Could not identify 'after'-variable to progress deeper.")
             else:
-                newer_links, links = getytlinks(link)
+                newer_links, links = getlinks(link)
                 new_links += newer_links
                 new_links = list(set(new_links))
 
