@@ -139,6 +139,10 @@ if __name__ == '__main__':
                 # Store the video in seen_links.
                 seen_links.append(link)
                 save_links.remove(link)
+                # Print some stats
+                print("Reddytt: Links left: %i" % len(save_links))
+                # New line to separate next mpv output
+                print("")
             elif p.returncode == 4:
                 # You made a hard exit, and want to stop. (Ctrl+C)
                 # Store the links and exit the program.
