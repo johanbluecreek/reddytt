@@ -115,7 +115,14 @@ if __name__ == '__main__':
             print("Reddytt: (Unseen) File not found. Creating empty file.")
             os.system("touch %s" % unseen_file)
 
-    new_links, links = getlinks(subreddit_link)
+    new_links = []
+    if depth < 0:
+        # Just a warning. Negative means not fetching new links.
+        print("Reddytt: Depth set to negative. No new links will be fetched.")
+    else:
+        # Otherwise, proceed to get links.
+        print("Reddytt: Fetching links.")
+        new_links, links = getlinks(subreddit_link)
 
     # Go deeper
     if depth > 0:
@@ -131,11 +138,13 @@ if __name__ == '__main__':
                 new_links += newer_links
                 new_links = list(set(new_links))
 
-    # we also want to watch the stored ones
+    # We also want to watch the stored ones
     new_links += unseen_links
     new_links = list(set(new_links))
 
     # Start watching
+    print("Reddytt: The watch begins.")
+    print("")
     save_links = new_links
     for link in new_links:
         if link in seen_links:
@@ -143,6 +152,9 @@ if __name__ == '__main__':
         else:
             p = subprocess.Popen(['mpv', link] + args.mpv, shell=False)
             p.communicate()
+            # Separate mpv and reddytt output
+            print("")
+            # Print the link (useful for saving manually if mpv messed up output)
             print("Reddytt: That was: %s" % link)
             if p.returncode == 0:
                 # The video finished or you hit 'q' (or whatever your binding is), this is a good exit.
@@ -166,7 +178,6 @@ if __name__ == '__main__':
             else:
                 # Something else happened. Bad link perhaps.
                 # Store in seen_links to avoid in the future.
-
                 seen_links.append(link)
                 save_links.remove(link)
 
