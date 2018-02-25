@@ -19,7 +19,7 @@ The long version,
 ```
 $ ./reddytt.py [options] <subreddit> [-- [mpv-arguments]]
 ```
-note that `<subreddit>` is just the name, e.g. `deepintoyoutube` not `r/deepintoyoutube` or anything else. The option available to you is `--depth d` which takes you `d` steps beyond the first page of the subreddit. All arguments following those are given to `mpv`.
+note that `<subreddit>` is just the name, e.g. `deepintoyoutube` not `r/deepintoyoutube` or anything else. The option available to you is `--depth d` which takes you `d` steps beyond the first page of the subreddit. Note that a negative depth means only already downloaded links will be played. All arguments following those are given to `mpv`.
 
 To stop a video and proceed to the next, press `q` of whatever your binding for stop is in mpv, and press `Ctrl+C` while a video is playing to stop the video, save the remaining links for the next time, and exit the script.
 
