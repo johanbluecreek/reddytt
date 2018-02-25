@@ -100,10 +100,20 @@ if __name__ == '__main__':
             pickle.dump(unseen_links, f)
     else:
         print("Reddytt: Working directory found. Loading variables.")
-        with open(seen_file, 'rb') as f:
-            seen_links = pickle.load(f)
-        with open(unseen_file, 'rb') as f:
-            unseen_links = pickle.load(f)
+        try:
+            with open(seen_file, 'rb') as f:
+                seen_links = pickle.load(f)
+        except FileNotFoundError:
+            # This allows you to remove the file manually to reset.
+            print("Reddytt: (Seen) File not found. Creating empty file.")
+            os.system("touch %s" % seen_file)
+        try:
+            with open(unseen_file, 'rb') as f:
+                unseen_links = pickle.load(f)
+        except FileNotFoundError:
+            # This allows you to remove the file manually to reset.
+            print("Reddytt: (Unseen) File not found. Creating empty file.")
+            os.system("touch %s" % unseen_file)
 
     new_links, links = getlinks(subreddit_link)
 
