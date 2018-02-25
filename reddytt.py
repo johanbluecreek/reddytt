@@ -177,6 +177,9 @@ if __name__ == '__main__':
                 sys.exit()
             else:
                 # Something else happened. Bad link perhaps.
+                print("Reddytt: mpv exited in an unexpected way. Exit code: ", p.returncode)
+                # New line to separate next mpv output
+                print("")
                 # Store in seen_links to avoid in the future.
                 seen_links.append(link)
                 save_links.remove(link)
