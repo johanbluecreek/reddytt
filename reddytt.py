@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 import argparse as ap
+import copy
 #from argparse import ArgumentParser, REMINDER
 
 ################
@@ -145,7 +146,7 @@ if __name__ == '__main__':
     # Start watching
     print("Reddytt: The watch begins.")
     print("")
-    save_links = new_links
+    save_links = copy.copy(new_links)
     for link in new_links:
         if link in seen_links:
             print("Reddytt: Link seen. Skipping.")
