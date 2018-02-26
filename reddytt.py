@@ -152,6 +152,7 @@ if __name__ == '__main__':
             print("Reddytt: Link seen. Skipping.")
             # Link is seen, do not need to save.
             save_links.remove(link)
+            print("Reddytt: Links left: %i" % len(save_links))
         else:
             p = subprocess.Popen(['mpv', link] + args.mpv, shell=False)
             p.communicate()
