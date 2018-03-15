@@ -24,6 +24,23 @@ import copy
 flatten = lambda l: [item for sublist in l for item in sublist]
 # cheers to https://stackoverflow.com/a/952952
 
+def create_input(work_dir):
+    # Create the file
+    input_file = work_dir + "/input.conf"
+    os.system("echo \"\" > %s" % input_file)
+    # Fill the file
+    ## Exits
+    # Remap '>' which is the default for next in playlist to trigger
+    # exit code to play next
+    os.system("echo \"> quit 0\" >> %s" % input_file)
+    # Remap 'q' to give an exit code to end this program.
+    os.system("echo \"q quit 4\" >> %s" % input_file)
+    # Map 'R' ro save link to the remember file (${path} and not ${filename}
+    # to get full URL)
+    os.system("echo \"R run \\\"/bin/bash\\\" \\\"-c\\\" \\\"echo \\\\\\\"\${path}\\\\\\\" >> ~/.reddytt/remember\\\" \" >> %s" % input_file)
+    # uses bash and quotes around ${path} to sanitize possible injection
+    # cheers to https://stackoverflow.com/a/4273137
+
 # Get and parse out links
 def getlinks(link):
     pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
@@ -74,10 +91,16 @@ if __name__ == '__main__':
     # Setup working directory
     work_dir = os.environ['HOME'] + "/.reddytt"
     sr_dir = work_dir + "/%s" % subreddit
+    # File for seen videos
     seen_file = sr_dir + "/seen"
     seen_links = []
+    # File for unseen videos
     unseen_file = sr_dir + "/unseen"
     unseen_links = []
+    # File for overiding mpv input.conf
+    input_file = work_dir + "/input.conf"
+    # File for remembering links
+    remember_file = work_dir + "/remember"
     print("Reddytt: Checking for reddytt working directory (%s)." % work_dir)
 
     if not os.path.isdir(work_dir):
@@ -116,6 +139,10 @@ if __name__ == '__main__':
             print("Reddytt: (Unseen) File not found. Creating empty file.")
             os.system("touch %s" % unseen_file)
 
+    if not os.path.isfile(input_file):
+        print("Reddytt: No input file found. Creating default file.")
+        create_input(work_dir)
+
     new_links = []
     if depth < 0:
         # Just a warning. Negative means not fetching new links.
@@ -141,7 +168,9 @@ if __name__ == '__main__':
 
     # We also want to watch the stored ones
     new_links += unseen_links
-    new_links = list(set(new_links))
+    # Remove repeted entries of links as well as the ones already seen
+    new_links = list(set(new_links)-set(seen_links))
+    print("Reddytt: Links to watch: %i" % len(new_links))
 
     # Start watching
     print("Reddytt: The watch begins.")
@@ -154,7 +183,7 @@ if __name__ == '__main__':
             save_links.remove(link)
             print("Reddytt: Links left: %i" % len(save_links))
         else:
-            p = subprocess.Popen(['mpv', link] + args.mpv, shell=False)
+            p = subprocess.Popen(['mpv', link, '--input-conf=%s' % input_file] + args.mpv, shell=False)
             p.communicate()
             # Separate mpv and reddytt output
             print("")
@@ -188,6 +217,7 @@ if __name__ == '__main__':
                 seen_links.append(link)
                 save_links.remove(link)
 
+    print("Reddytt: All links consumed. Saving and exiting.")
     # The playlist is finished. Save everything.
     with open(seen_file, 'wb') as f:
         pickle.dump(seen_links, f)
