@@ -25,6 +25,11 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 # cheers to https://stackoverflow.com/a/952952
 
 def create_input(work_dir):
+    """
+        create_input(work_dir)
+
+    Create `mpv` `input.conf`-file to overide default settings.
+    """
     # Create the file
     input_file = work_dir + "/input.conf"
     os.system("echo \"\" > %s" % input_file)
@@ -41,39 +46,50 @@ def create_input(work_dir):
     # uses bash and quotes around ${path} to sanitize possible injection
     # cheers to https://stackoverflow.com/a/4273137
 
-# Get and parse out links
 def getlinks(link):
+    """
+        getlinks(link)
+
+    Get and parse out Reddytt-supported links at `link`.
+    """
+    # Prepare the soup that is a reddit page
     pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
     html_page = pm.request('GET', link)
     soup = BeautifulSoup(html_page.data, "lxml")
-    links = [a.get('href') for a in soup('a') if a.get('href')]
 
-    # Pick out youtube links
-    new_links = [x for x in links if re.match("^https://youtu\.be", x)]
-    newer_links = [x for x in links if re.match("^https://www\.youtube\.com/watch", x)]
-    # the youtube.com links are not always well formatted for mpv, so we reformat them:
-    for lk in newer_links:
-        videolabel = re.search('v=([^&?]*)', lk).group(1)
-        if videolabel is None:
-            print('Reddytt: skipping URL without video label:', lk)
-            continue
-        new_links.append('https://www.youtube.com/watch?v=' + videolabel)
+    # Pick out all links that has a text, and their text.
+    lts = [
+        (a.get('href'), a.get_text())
+    for a in soup('a') if all([a.get('href'), not a.get_text() == ''])]
 
-    # Pick out clips.twitch.tv links
-    for lk in links:
-        if re.match("^https://clips\.twitch\.tv/", lk):
-            new_links.append(lk)
-
+    # Collect all the supported links
+    ybe_links = [x for x in lts if re.match("^https://youtu\.be", x[0])]
+    yt_links = [x for x in lts if re.match("^https://www\.youtube\.com/watch", x[0])]
+    tc_links = [x for x in lts if re.match("^https://clips\.twitch\.tv/", x[0])]
     # In principle, add anything here you want. I guess all of these should
     # work: https://rg3.github.io/youtube-dl/supportedsites.html
 
-    return new_links, links
+    # Reformat links where necessary
+    yt_links_n = []
+    for lk in yt_links:
+        videolabel = re.search('v=([^&?]*)', lk[0]).group(1)
+        if videolabel is None:
+            print('Reddytt: skipping URL without video label:', lk)
+            continue
+        yt_links_n.append(('https://www.youtube.com/watch?v=' + videolabel, lk[1]))
+
+    # Collect all links
+    all_links = ybe_links + yt_links_n + tc_links
+
+    return all_links, list(map(lambda x: x[0], lts))
 
 ################
 # Main
 ################
 
 if __name__ == '__main__':
+
+    ### Resolve arguments ###
 
     parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links/twitch clips from your favourite subreddit.')
 
@@ -87,6 +103,8 @@ if __name__ == '__main__':
     depth = args.depth
 
     subreddit_link = "https://reddit.com/r/" + subreddit
+
+    ### Check on directories and files ###
 
     # Setup working directory
     work_dir = os.environ['HOME'] + "/.reddytt"
@@ -138,10 +156,15 @@ if __name__ == '__main__':
             # This allows you to remove the file manually to reset.
             print("Reddytt: (Unseen) File not found. Creating empty file.")
             os.system("touch %s" % unseen_file)
+        # Resolve compatability issues with older versions:
+        seen_links = [ (l, '') if not type(l) == tuple else l for l in seen_links]
+        unseen_links = [ (l, '') if not type(l) == tuple else l for l in unseen_links]
 
     if not os.path.isfile(input_file):
         print("Reddytt: No input file found. Creating default file.")
         create_input(work_dir)
+
+    ### Get links to play ###
 
     new_links = []
     if depth < 0:
@@ -172,25 +195,28 @@ if __name__ == '__main__':
     new_links = list(set(new_links)-set(seen_links))
     print("Reddytt: Links to watch: %i" % len(new_links))
 
-    # Start watching
+    ### Start watching ###
+
     print("Reddytt: The watch begins.")
     print("")
     save_links = copy.copy(new_links)
     for link in new_links:
-        if link in seen_links:
+        if link[0] in map(lambda x: x[0], seen_links):
             print("Reddytt: Link seen. Skipping.")
             # Link is seen, do not need to save.
             save_links.remove(link)
             print("Reddytt: Links left: %i" % len(save_links))
         else:
-            p = subprocess.Popen(['mpv', link, '--input-conf=%s' % input_file] + args.mpv, shell=False)
+            print("\nReddytt: Playing: %s\n" % link[1])
+            p = subprocess.Popen(['mpv', link[0], '--input-conf=%s' % input_file] + args.mpv, shell=False)
             p.communicate()
             # Separate mpv and reddytt output
             print("")
             # Print the link (useful for saving manually if mpv messed up output)
-            print("Reddytt: That was: %s" % link)
+            print("Reddytt: That was: %s" % link[1])
+            print("Reddytt:           %s\n" % link[0])
             if p.returncode == 0:
-                # The video finished or you hit 'q' (or whatever your binding is), this is a good exit.
+                # The video finished or you hit '>' (default reddyt binding), this is a good exit.
                 # Store the video in seen_links.
                 seen_links.append(link)
                 save_links.remove(link)
@@ -199,7 +225,7 @@ if __name__ == '__main__':
                 # New line to separate next mpv output
                 print("")
             elif p.returncode == 4:
-                # You made a hard exit, and want to stop. (Ctrl+C)
+                # You made a hard exit, and want to stop. ('q')
                 # Store the links and exit the program.
                 print("Reddytt: Forced exit detected. Saving and exiting.")
                 with open(seen_file, 'wb') as f:
