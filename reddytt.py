@@ -45,6 +45,8 @@ def create_input(work_dir):
     os.system("echo \"R run \\\"/bin/bash\\\" \\\"-c\\\" \\\"echo \\\\\\\"\${path}\\\\\\\" >> ~/.reddytt/remember\\\" \" >> %s" % input_file)
     # uses bash and quotes around ${path} to sanitize possible injection
     # cheers to https://stackoverflow.com/a/4273137
+    # Map 'i' to display title
+    os.system("echo \"i show-text \\\"\${title}\\\"\" >> %s" % input_file)
 
 def getlinks(link):
     """
@@ -160,9 +162,10 @@ if __name__ == '__main__':
         seen_links = [ (l, '') if not type(l) == tuple else l for l in seen_links]
         unseen_links = [ (l, '') if not type(l) == tuple else l for l in unseen_links]
 
-    if not os.path.isfile(input_file):
-        print("Reddytt: No input file found. Creating default file.")
-        create_input(work_dir)
+    # Create input.conf every time. This is so that you always get a
+    # working input file, incase that has changed between versions.
+    print("Reddytt: Creating 'input.conf' file.")
+    create_input(work_dir)
 
     ### Get links to play ###
 
@@ -208,7 +211,14 @@ if __name__ == '__main__':
             print("Reddytt: Links left: %i" % len(save_links))
         else:
             print("\nReddytt: Playing: %s\n" % link[1])
-            p = subprocess.Popen(['mpv', link[0], '--input-conf=%s' % input_file] + args.mpv, shell=False)
+            p = subprocess.Popen(
+                [
+                    'mpv',
+                    link[0],
+                    '--input-conf=%s' % input_file,
+                    '--title=\"%s\"' % link[1]
+                ] + args.mpv
+            , shell=False)
             p.communicate()
             # Separate mpv and reddytt output
             print("")
