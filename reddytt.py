@@ -218,6 +218,11 @@ if __name__ == '__main__':
     print("")
     save_links = copy.copy(new_links)
     for link in new_links:
+
+        # Verify integrety of `link` variable, this is to avoid bug that can appear using files generated from reddytt older than v1.2
+        if not type(link) == tuple:
+            link = (link, '')
+        
         if link[0] in map(lambda x: x[0], seen_links):
             print("Reddytt: Link seen. Skipping.")
             # Link is seen, do not need to save.
