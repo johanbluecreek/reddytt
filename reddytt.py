@@ -14,6 +14,8 @@ import subprocess
 import sys
 import argparse as ap
 import copy
+from datetime import date
+import time
 #from argparse import ArgumentParser, REMINDER
 
 ################
@@ -30,8 +32,14 @@ def create_input(work_dir):
 
     Create `mpv` `input.conf`-file to overide default settings.
     """
-    # Create the file
+    # Create path to file
     input_file = work_dir + "/input.conf"
+    # Make a backup if relevant
+    if os.path.isfile(input_file):
+        backup_file = input_file + "-" + date.today().isoformat() + "-" + str(int(time.time()))
+        print("Reddytt: Creating backup of old `input.conf`: %s" % backup_file)
+        os.system("cp {} {}".format(input_file, backup_file))
+    # Start creating the file
     os.system("echo \"\" > %s" % input_file)
     # Fill the file
     ## Exits
@@ -95,7 +103,8 @@ if __name__ == '__main__':
 
     parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links/twitch clips from your favourite subreddit.')
 
-    parser.add_argument('--depth', metavar='d', type=int, default=0, help='How many pages into the subreddit you want to go.')
+    parser.add_argument('--depth', metavar='d', type=int, default=0, help='How many pages into the subreddit you want to go. (`0` is frontpage, each positive number another page after that. Negative will not fetch new links at all.)')
+    parser.add_argument('--gen-input', action='store_true', help='Trigger reddytt to generate reddytt\'s default `input.conf`. (It is good to run this if you have updated reddytt (if you have a custom `input.conf`, make a backup first.).)')
     parser.add_argument('subreddit', type=str, help='The subreddit you want to play.')
     parser.add_argument('mpv', nargs=ap.REMAINDER, help='Arguments to pass to `mpv`.')
 
@@ -103,6 +112,7 @@ if __name__ == '__main__':
 
     subreddit = args.subreddit
     depth = args.depth
+    gen_input = args.gen_input
 
     subreddit_link = "https://reddit.com/r/" + subreddit
 
@@ -162,10 +172,14 @@ if __name__ == '__main__':
         seen_links = [ (l, '') if not type(l) == tuple else l for l in seen_links]
         unseen_links = [ (l, '') if not type(l) == tuple else l for l in unseen_links]
 
-    # Create input.conf every time. This is so that you always get a
-    # working input file, incase that has changed between versions.
-    print("Reddytt: Creating 'input.conf' file.")
-    create_input(work_dir)
+    # New optional flag triggers input.conf generation, or if the file does not exists.
+    if gen_input:
+        print("Reddytt: Generating 'input.conf' file and exiting.")
+        create_input(work_dir)
+        sys.exit()
+    elif not os.path.isfile(work_dir + "/input.conf"):
+        print("Reddytt: No input-file found, creating 'input.conf' file.")
+        create_input(work_dir)
 
     ### Get links to play ###
 
