@@ -33,7 +33,7 @@ Reddytt will generate a `input.conf`-file (to be stored in `~/.reddytt/`) and ov
  * `q`: Saves and **q**uits remaining links (old `Ctrl+C` behaviour)
  * `>`: Plays next video (old `q` behaviour)
  * `R`: **R**emembers video link (and title) in `~/.reddytt/remember` (plain text)
- * `i`: Prints the Reddit-given title of the video in mpv.
+ * `i`: Prints the **i**nfo (Reddit-given title of the video) in mpv.
 
 To override, edit `~/.reddytt/input.conf` at your own leisure.
 
