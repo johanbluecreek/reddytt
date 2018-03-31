@@ -50,7 +50,7 @@ def create_input(work_dir):
     os.system("echo \"q quit 4\" >> %s" % input_file)
     # Map 'R' ro save link to the remember file (${path} and not ${filename}
     # to get full URL)
-    os.system("echo \"R run \\\"/bin/bash\\\" \\\"-c\\\" \\\"echo \\\\\\\"\${path}\\\\\\\" >> ~/.reddytt/remember\\\" \" >> %s" % input_file)
+    os.system("echo \"R run \\\"/bin/bash\\\" \\\"-c\\\" \\\"echo \\\\\\\"\${title}: \${path}\\\\\\\" >> ~/.reddytt/remember\\\" \" >> %s" % input_file)
     # uses bash and quotes around ${path} to sanitize possible injection
     # cheers to https://stackoverflow.com/a/4273137
     # Map 'i' to display title
