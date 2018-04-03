@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+################################################################################
+################################################################################
+#
+#   reddytt.py
+#   https://github.com/johanbluecreek/reddytt
+#
+__version__ = "1.3.1"
+#
+################################################################################
+################################################################################
+
 ################
 # Imports
 ################
@@ -103,9 +114,13 @@ if __name__ == '__main__':
 
     parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links/twitch clips from your favourite subreddit.')
 
+    # Optional arguemnts
     parser.add_argument('--depth', metavar='d', type=int, default=0, help='How many pages into the subreddit you want to go. (`0` is frontpage, each positive number another page after that. Negative will not fetch new links at all.)')
-    parser.add_argument('--gen-input', action='store_true', help='Trigger reddytt to generate reddytt\'s default `input.conf`. (It is good to run this if you have updated reddytt (if you have a custom `input.conf`, make a backup first.).)')
-    parser.add_argument('subreddit', type=str, help='The subreddit you want to play.')
+    parser.add_argument('--gen-input', action='store_true', help='Trigger reddytt to generate reddytt\'s default `input.conf`, and backup the old one. (It is good to run this if you have updated reddytt.)')
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__), help="Prints version number and exits.")
+
+    # Positional arguments
+    parser.add_argument('subreddit', type=str, help='The subreddit you want to play.', nargs='?')
     parser.add_argument('mpv', nargs=ap.REMAINDER, help='Arguments to pass to `mpv`.')
 
     args = parser.parse_args()
@@ -114,12 +129,24 @@ if __name__ == '__main__':
     depth = args.depth
     gen_input = args.gen_input
 
-    subreddit_link = "https://reddit.com/r/" + subreddit
-
     ### Check on directories and files ###
 
     # Setup working directory
     work_dir = os.environ['HOME'] + "/.reddytt"
+
+    # New optional flag triggers input.conf generation, or if the file does not exists.
+    if gen_input:
+        print("Reddytt: Generating 'input.conf' file and exiting.")
+        if not os.path.isdir(work_dir):
+            os.mkdir(work_dir)
+        create_input(work_dir)
+        sys.exit()
+    elif not os.path.isfile(work_dir + "/input.conf"):
+        print("Reddytt: No input-file found, creating 'input.conf' file.")
+        create_input(work_dir)
+
+    subreddit_link = "https://reddit.com/r/" + subreddit
+
     sr_dir = work_dir + "/%s" % subreddit
     # File for seen videos
     seen_file = sr_dir + "/seen"
@@ -131,7 +158,6 @@ if __name__ == '__main__':
     input_file = work_dir + "/input.conf"
     # File for remembering links
     remember_file = work_dir + "/remember"
-    print("Reddytt: Checking for reddytt working directory (%s)." % work_dir)
 
     if not os.path.isdir(work_dir):
         print("Reddytt: Working directory not found. Creating %s, and files." % work_dir)
@@ -172,14 +198,6 @@ if __name__ == '__main__':
         seen_links = [ (l, '') if not type(l) == tuple else l for l in seen_links]
         unseen_links = [ (l, '') if not type(l) == tuple else l for l in unseen_links]
 
-    # New optional flag triggers input.conf generation, or if the file does not exists.
-    if gen_input:
-        print("Reddytt: Generating 'input.conf' file and exiting.")
-        create_input(work_dir)
-        sys.exit()
-    elif not os.path.isfile(work_dir + "/input.conf"):
-        print("Reddytt: No input-file found, creating 'input.conf' file.")
-        create_input(work_dir)
 
     ### Get links to play ###
 
@@ -222,7 +240,7 @@ if __name__ == '__main__':
         # Verify integrety of `link` variable, this is to avoid bug that can appear using files generated from reddytt older than v1.2
         if not type(link) == tuple:
             link = (link, '')
-        
+
         if link[0] in map(lambda x: x[0], seen_links):
             print("Reddytt: Link seen. Skipping.")
             # Link is seen, do not need to save.
