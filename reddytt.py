@@ -6,7 +6,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.3.1"
+__version__ = "1.3.2"
 #
 ################################################################################
 ################################################################################
@@ -67,6 +67,32 @@ def create_input(work_dir):
     # Map 'i' to display title
     os.system("echo \"i show-text \\\"\${title}\\\"\" >> %s" % input_file)
 
+def getsoup(link, rec=False):
+    """
+        getsoup(link)
+
+    Calls BeautifulSoup.
+    """
+    pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
+    html_page = pm.request('GET', link)
+    soup = BeautifulSoup(html_page.data, "lxml")
+
+    # The absense of 'after' is the sign for when Issue #8 will be triggered.
+    has_after = not all([ not 'after=' in a.get('href') for a in soup('a') if a.get('href') ])
+    if (not has_after) and (not rec):
+        print('Reddytt: Fetching links did not go as planned. Will try some more times and then give up.')
+        tries = 0
+        while tries <= 3 and not has_after:
+            soup = getsoup(link, True)
+            has_after = not all([ not 'after=' in a.get('href') for a in soup('a') if a.get('href') ])
+            tries +=1
+        if not has_after:
+            print('Reddytt: The problem was not resolved. This can mean that you are trying to access more depth than is available, or that reddit.com is refusing to cooperate.')
+        else:
+            print('Reddytt: The problem was resolved.')
+
+    return soup
+
 def getlinks(link):
     """
         getlinks(link)
@@ -74,9 +100,7 @@ def getlinks(link):
     Get and parse out Reddytt-supported links at `link`.
     """
     # Prepare the soup that is a reddit page
-    pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
-    html_page = pm.request('GET', link)
-    soup = BeautifulSoup(html_page.data, "lxml")
+    soup = getsoup(link)
 
     # Pick out all links that has a text, and their text.
     lts = [
