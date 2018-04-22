@@ -30,8 +30,13 @@ __version__ = "1.3.2"
 
 import os
 import pickle
+
 from bs4 import BeautifulSoup
 import urllib3
+
+import requests
+import json
+
 import certifi
 import re
 import subprocess
@@ -171,6 +176,65 @@ def getlinks(link):
 
     return all_links, list(map(lambda x: x[0], lts))
 
+
+ ####  #      ######   ##   #    #         #   # #####
+#    # #      #       #  #  ##   #          # #    #
+#      #      #####  #    # # #  #           #     #
+#      #      #      ###### #  # #           #     #
+#    # #      #      #    # #   ##           #     #
+ ####  ###### ###### #    # #    #           #     #
+                                   #######
+
+def clean_yt(link_list):
+    """
+        clean_yt(link_list)
+
+    Cleans up all youtube-links.
+
+    Given a list of links, it returns the same set of links with `&` escaped so
+    that it can be passed to `mpv`.
+    """
+    return link_list
+
+
+#####  ######  ####  #      # #    # #    #  ####
+#    # #      #    # #      # ##   # #   #  #
+#    # #####  #    # #      # # #  # ####    ####
+#####  #      #  # # #      # #  # # #  #        #
+#   #  #      #   #  #      # #   ## #   #  #    #
+#    # ######  ### # ###### # #    # #    #  ####
+
+def reqlinks(link):
+    """
+        reqlinks(link)
+
+    Request and parse out Reddytt-supported links at `link`.
+    """
+    req = requests.get(link)
+    data = req.json()
+
+    # Handle errors reddit might give us
+    if 'error' in data.keys():
+        print("Reddytt: Was presened with the Reddit error: " + str(data['error']) + " -- " + data['message'])
+        print("Reddytt: Will try some more, and then give up.")
+        error = True
+        tries = 0
+        while tries < 3 and error:
+            req = requests.get(link)
+            data = req.json()
+            error = 'error' in data.keys()
+            tries += 1
+        if error:
+            print("Reddytt: Error was not resolved. If this was a \'Too Many Requests\'-error, try again later. Otherwise, file an issue with Reddytt.")
+        else:
+            print('Reddytt: Error was resolved.')
+
+    links = [ (child['data']['url'], child['data']['title']) for child in data['data']['children']]
+    links += clean_yt([('https://www.youtube.com/watch?v=jI9tSvkuVQQ', 'FAKE LINK')])
+    after = data['data']['after']
+
+    return links, after
+
 ################################################################################
                           #     #    #    ### #     #
                           ##   ##   # #    #  ##    #
@@ -234,7 +298,7 @@ if __name__ == '__main__':
         print("Reddytt: No input-file found, creating 'input.conf' file.")
         create_input(work_dir)
 
-    subreddit_link = "https://reddit.com/r/" + subreddit
+    subreddit_link = "https://reddit.com/r/" + subreddit + "/.json"
 
     sr_dir = work_dir + "/%s" % subreddit
     # File for seen videos
@@ -297,6 +361,13 @@ if __name__ == '__main__':
 
     ### Get links to play ###
 
+    links, after = reqlinks(subreddit_link)
+
+    print(links)
+    print(after)
+
+    sys.exit()
+
     new_links = []
     if depth < 0:
         # Just a warning. Negative means not fetching new links.
@@ -335,6 +406,7 @@ if __name__ == '__main__':
             #     ####    #   #    # #    #   #
 
     ### Start watching ###
+    sys.exit()
 
     print("Reddytt: The watch begins.")
     print("")
