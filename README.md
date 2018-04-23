@@ -4,7 +4,7 @@ Do you also find yourself not being able to waste time on [reddit](https://www.r
 
 ## Dependencies
 
-Python modules: pickle, bs4, urllib3, certifi, argparse, lxml; Player: mpv
+Python modules: argparse, requests (rest should be built in); Player: mpv
 
 These dependencies can be installed using the command `pip install -r requirements.txt`, or possibly your system package manager.
 

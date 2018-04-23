@@ -1,5 +1,2 @@
-bs4
-urllib3
-certifi
+requests
 argparse
-lxml
