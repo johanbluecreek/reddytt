@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.3.2"
+__version__ = "1.4.0"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
