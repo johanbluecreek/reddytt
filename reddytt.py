@@ -14,6 +14,7 @@
 #   https://github.com/johanbluecreek/reddytt
 #
 __version__ = "1.3.2"
+user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
 ################################################################################
@@ -45,7 +46,7 @@ import argparse as ap
 import copy
 from datetime import date
 import time
-#from argparse import ArgumentParser, REMINDER
+import random
 
 ################################################################################
       ####### #     # #     #  #####  ####### ### ####### #     #  #####
@@ -190,11 +191,25 @@ def clean_yt(link_list):
         clean_yt(link_list)
 
     Cleans up all youtube-links.
-
-    Given a list of links, it returns the same set of links with `&` escaped so
-    that it can be passed to `mpv`.
     """
-    return link_list
+    # List to return
+    new_list = []
+    for link in link_list:
+        # Only handle youtube links here
+        if re.match("^https://www\.youtube\.com/watch", link[0]):
+            # Find the label
+            videolabel = re.search('v=([^&?]*)', link[0]).group(1)
+            # If there for some strange reason would not be one
+            if videolabel is None:
+                print('Reddytt: skipping URL without video label:', link)
+                continue
+            # Add the cleaned up link
+            new_list.append(('https://www.youtube.com/watch?v=' + videolabel, link[1]))
+        else:
+            # Or just add the original link if not youtube
+            new_list.append(link)
+
+    return new_list
 
 
 #####  ######  ####  #      # #    # #    #  ####
@@ -210,27 +225,23 @@ def reqlinks(link):
 
     Request and parse out Reddytt-supported links at `link`.
     """
-    req = requests.get(link)
+    # Generate a seed for the user agent and send request
+    ua = user_agent + " " + str(random.randint(100,999))
+    req = requests.get(link, headers={'User-Agent': ua})
     data = req.json()
 
     # Handle errors reddit might give us
     if 'error' in data.keys():
         print("Reddytt: Was presened with the Reddit error: " + str(data['error']) + " -- " + data['message'])
-        print("Reddytt: Will try some more, and then give up.")
-        error = True
-        tries = 0
-        while tries < 3 and error:
-            req = requests.get(link)
-            data = req.json()
-            error = 'error' in data.keys()
-            tries += 1
-        if error:
-            print("Reddytt: Error was not resolved. If this was a \'Too Many Requests\'-error, try again later. Otherwise, file an issue with Reddytt.")
-        else:
-            print('Reddytt: Error was resolved.')
+        print("Reddytt: Depending on the error, wait a while, or file an issue with Reddytt.")
 
+    # Collect video urls and titles
     links = [ (child['data']['url'], child['data']['title']) for child in data['data']['children']]
-    links += clean_yt([('https://www.youtube.com/watch?v=jI9tSvkuVQQ', 'FAKE LINK')])
+
+    # Clean up links
+    links = clean_yt(links)
+
+    # Find the 'after' variable
     after = data['data']['after']
 
     return links, after
@@ -361,40 +372,32 @@ if __name__ == '__main__':
 
     ### Get links to play ###
 
-    links, after = reqlinks(subreddit_link)
-
-    print(links)
-    print(after)
-
-    sys.exit()
-
     new_links = []
+
     if depth < 0:
         # Just a warning. Negative means not fetching new links.
         print("Reddytt: Depth set to negative. No new links will be fetched.")
     else:
         # Otherwise, proceed to get links.
         print("Reddytt: Fetching links.")
-        new_links, links = getlinks(subreddit_link)
+        new_links, after = reqlinks(subreddit_link)
 
     # Go deeper
-    if depth > 0:
-        for d in range(depth):
-            link = ""
-            for l in links:
-                if re.search("after=", l):
-                    link = l
-            if link == "":
-                print("Reddytt: Could not identify 'after'-variable to progress deeper.")
-            else:
-                newer_links, links = getlinks(link)
-                new_links += newer_links
-                new_links = list(set(new_links))
+    d = 0
+    while depth > d and not after == None:
+        link = subreddit_link + "?after={}".format(after)
+
+        newer_links, after = reqlinks(link)
+        d += 1
+
+        new_links += newer_links
+        new_links = list(set(new_links))
 
     # We also want to watch the stored ones
-    new_links += unseen_links
+    watch_links = new_links + unseen_links
     # Remove repeted entries of links as well as the ones already seen
-    new_links = list(set(new_links)-set(seen_links))
+    watch_links = list(set(watch_links)-set(seen_links))
+
     print("Reddytt: Links to watch: %i" % len(new_links))
 
             #
@@ -406,12 +409,12 @@ if __name__ == '__main__':
             #     ####    #   #    # #    #   #
 
     ### Start watching ###
-    sys.exit()
 
     print("Reddytt: The watch begins.")
     print("")
+
     save_links = copy.copy(new_links)
-    for link in new_links:
+    for link in watch_links:
 
         # Verify integrety of `link` variable, this is to avoid bug that can appear using files generated from reddytt older than v1.2
         if not type(link) == tuple:
