@@ -31,14 +31,8 @@ user_agent = "Reddytt v{}".format(__version__)
 
 import os
 import pickle
-
-from bs4 import BeautifulSoup
-import urllib3
-
 import requests
 import json
-
-import certifi
 import re
 import subprocess
 import sys
@@ -99,83 +93,6 @@ def create_input(work_dir):
     # cheers to https://stackoverflow.com/a/4273137
     # Map 'i' to display title
     os.system("echo \"i show-text \\\"\${title}\\\"\" >> %s" % input_file)
-
-
- ####  ###### #####  ####   ####  #    # #####
-#    # #        #   #      #    # #    # #    #
-#      #####    #    ####  #    # #    # #    #
-#  ### #        #        # #    # #    # #####
-#    # #        #   #    # #    # #    # #
- ####  ######   #    ####   ####   ####  #
-
-
-def getsoup(link, rec=False):
-    """
-        getsoup(link)
-
-    Calls BeautifulSoup.
-    """
-    pm = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
-    html_page = pm.request('GET', link)
-    soup = BeautifulSoup(html_page.data, "lxml")
-
-    # The absense of 'after' is the sign for when Issue #8 will be triggered.
-    has_after = not all([ not 'after=' in a.get('href') for a in soup('a') if a.get('href') ])
-    if (not has_after) and (not rec):
-        print('Reddytt: Fetching links did not go as planned. Will try some more times and then give up.')
-        tries = 0
-        while tries <= 3 and not has_after:
-            soup = getsoup(link, True)
-            has_after = not all([ not 'after=' in a.get('href') for a in soup('a') if a.get('href') ])
-            tries +=1
-        if not has_after:
-            print('Reddytt: The problem was not resolved. This can mean that you are trying to access more depth than is available, or that reddit.com is refusing to cooperate.')
-        else:
-            print('Reddytt: The problem was resolved.')
-
-    return soup
-
- ####  ###### ##### #      # #    # #    #  ####
-#    # #        #   #      # ##   # #   #  #
-#      #####    #   #      # # #  # ####    ####
-#  ### #        #   #      # #  # # #  #        #
-#    # #        #   #      # #   ## #   #  #    #
- ####  ######   #   ###### # #    # #    #  ####
-
-def getlinks(link):
-    """
-        getlinks(link)
-
-    Get and parse out Reddytt-supported links at `link`.
-    """
-    # Prepare the soup that is a reddit page
-    soup = getsoup(link)
-
-    # Pick out all links that has a text, and their text.
-    lts = [
-        (a.get('href'), a.get_text())
-    for a in soup('a') if all([a.get('href'), not a.get_text() == ''])]
-
-    # Collect all the supported links
-    ybe_links = [x for x in lts if re.match("^https://youtu\.be", x[0])]
-    yt_links = [x for x in lts if re.match("^https://www\.youtube\.com/watch", x[0])]
-    tc_links = [x for x in lts if re.match("^https://clips\.twitch\.tv/", x[0])]
-    # In principle, add anything here you want. I guess all of these should
-    # work: https://rg3.github.io/youtube-dl/supportedsites.html
-
-    # Reformat links where necessary
-    yt_links_n = []
-    for lk in yt_links:
-        videolabel = re.search('v=([^&?]*)', lk[0]).group(1)
-        if videolabel is None:
-            print('Reddytt: skipping URL without video label:', lk)
-            continue
-        yt_links_n.append(('https://www.youtube.com/watch?v=' + videolabel, lk[1]))
-
-    # Collect all links
-    all_links = ybe_links + yt_links_n + tc_links
-
-    return all_links, list(map(lambda x: x[0], lts))
 
 
  ####  #      ######   ##   #    #         #   # #####
@@ -398,7 +315,7 @@ if __name__ == '__main__':
     # Remove repeted entries of links as well as the ones already seen
     watch_links = list(set(watch_links)-set(seen_links))
 
-    print("Reddytt: Links to watch: %i" % len(new_links))
+    print("Reddytt: Links to watch: %i" % len(watch_links))
 
             #
             #     ####  #####   ##   #####  #####
@@ -413,7 +330,7 @@ if __name__ == '__main__':
     print("Reddytt: The watch begins.")
     print("")
 
-    save_links = copy.copy(new_links)
+    save_links = copy.copy(watch_links)
     for link in watch_links:
 
         # Verify integrety of `link` variable, this is to avoid bug that can appear using files generated from reddytt older than v1.2
