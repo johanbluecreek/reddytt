@@ -34,9 +34,11 @@ Reddytt will generate a `input.conf`-file (to be stored in `~/.reddytt/`) and ov
  * `>`: Plays next video (old `q` behaviour)
  * `R`: **R**emembers video link (and title) in `~/.reddytt/remember` (plain text)
  * `i`: Prints the **i**nfo (Reddit-given title of the video) in mpv
- * `Ctrl+o`: Opens video link in browser (using `xdg-open`)
+ * `Ctrl+o`: Video link is **o**pened in default browser (using `xdg-open`)
+ * `Ctrl+r`: Opens **r**eddit comments link in default browser
+ * `n`: Displays **n**umber of videos left in the list
 
-To override, edit `~/.reddytt/input.conf` at your own leisure.
+To override, edit `~/.reddytt/input.conf` at your own leisure (note that the two last mappings are hard coded for now).
 
 On quit, it saves seen videos to `~/.reddytt/[subreddit]/seen` and a list of unseen videos to `~/.reddytt/[subreddit]/unseen` (using pickle).
 
