@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -93,6 +93,8 @@ def create_input(work_dir):
     # cheers to https://stackoverflow.com/a/4273137
     # Map 'i' to display title
     os.system("echo \"i show-text \\\"\${title}\\\"\" >> %s" % input_file)
+    # Map 'Ctrl+o' to open link in browser
+    os.system("echo \"Ctrl+o run \\\"/bin/bash\\\" \\\"-c\\\" \\\"xdg-open \\\\\\\"\${path}\\\\\\\"\\\" \" >> %s" % input_file)
 
 
  ####  #      ######   ##   #    #         #   # #####

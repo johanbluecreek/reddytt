@@ -30,10 +30,11 @@ $ ./reddytt.py --depth 2 deepintoyoutube -- --fs
 
 Reddytt will generate a `input.conf`-file (to be stored in `~/.reddytt/`) and override the mpv default, or user-set, key mapping (that is, reddytt runs mpv with `--input-conf=` set). Nothing will permanently change for you, but you should be aware of the default key-mapping of reddytt:
 
- * `q`: Saves and **q**uits remaining links (old `Ctrl+C` behaviour)
+ * `q`: Saves and **q**uits remaining links (old `Ctrl+c` behaviour)
  * `>`: Plays next video (old `q` behaviour)
  * `R`: **R**emembers video link (and title) in `~/.reddytt/remember` (plain text)
- * `i`: Prints the **i**nfo (Reddit-given title of the video) in mpv.
+ * `i`: Prints the **i**nfo (Reddit-given title of the video) in mpv
+ * `Ctrl+o`: Opens video link in browser (using `xdg-open`)
 
 To override, edit `~/.reddytt/input.conf` at your own leisure.
 
