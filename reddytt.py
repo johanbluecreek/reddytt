@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -41,6 +41,7 @@ import copy
 from datetime import date
 import time
 import random
+from shutil import copyfile
 
 ################################################################################
       ####### #     # #     #  #####  ####### ### ####### #     #  #####
@@ -64,6 +65,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 #    # #   #  #      #    #   #   #              # #   ## #      #    #   #
  ####  #    # ###### #    #   #   ######         # #    # #       ####    #
                                          #######
+
 def create_input(work_dir):
     """
         create_input(work_dir)
@@ -86,8 +88,7 @@ def create_input(work_dir):
     os.system("echo \"> quit 0\" >> %s" % input_file)
     # Remap 'q' to give an exit code to end this program.
     os.system("echo \"q quit 4\" >> %s" % input_file)
-    # Map 'R' ro save link to the remember file (${path} and not ${filename}
-    # to get full URL)
+    # Map 'R' ro save link to the remember file (${path} and not ${filename} to get full URL)
     os.system("echo \"R run \\\"/bin/bash\\\" \\\"-c\\\" \\\"echo \\\\\\\"\${title}: \${path}\\\\\\\" >> ~/.reddytt/remember\\\" \" >> %s" % input_file)
     # uses bash and quotes around ${path} to sanitize possible injection
     # cheers to https://stackoverflow.com/a/4273137
@@ -95,6 +96,41 @@ def create_input(work_dir):
     os.system("echo \"i show-text \\\"\${title}\\\"\" >> %s" % input_file)
     # Map 'Ctrl+o' to open link in browser
     os.system("echo \"Ctrl+o run \\\"/bin/bash\\\" \\\"-c\\\" \\\"xdg-open \\\\\\\"\${path}\\\\\\\"\\\" \" >> %s" % input_file)
+
+
+##### #    # #####          # #    # #####  #    # #####
+  #   ##  ## #    #         # ##   # #    # #    #   #
+  #   # ## # #    #         # # #  # #    # #    #   #
+  #   #    # #####          # #  # # #####  #    #   #
+  #   #    # #              # #   ## #      #    #   #
+  #   #    # #              # #    # #       ####    #
+                    #######
+
+def tmp_input(work_dir, link, num):
+    """
+        tmp_input(work_dir, link, num)
+
+    Generates temporary `input.conf` from the base one.
+    """
+    # Create paths to files
+    input_file = work_dir + "/input.conf"
+    tmp_file = work_dir + "/input.conf_tmp"
+
+    # Copy the base
+    copyfile(input_file, tmp_file)
+
+    # Add the extra mappings
+    # Map 'Ctrl+r' to open Reddit-link in browser
+    map_string = ""
+    try:
+        map_string = "echo \"Ctrl+r run \\\"/bin/bash\\\" \\\"-c\\\" \\\"xdg-open \\\\\\\"{}{}\\\\\\\"\\\" \" >> {}".format("https://www.reddit.com", link[2], tmp_file)
+    except IndexError:
+        print("Reddytt: Old link encountered.")
+        map_string = "echo \"Ctrl+r show-text \\\"Reddit link not available\\\"\" >> {}".format(tmp_file)
+    os.system(map_string)
+    # Map 'n' to show links-left number
+    map_string = "echo \"n show-text \\\"{}\\\"\" >> {}".format(str(num), tmp_file)
+    os.system(map_string)
 
 
  ####  #      ######   ##   #    #         #   # #####
@@ -155,7 +191,7 @@ def reqlinks(link):
         print("Reddytt: Depending on the error, wait a while, or file an issue with Reddytt.")
 
     # Collect video urls and titles
-    links = [ (child['data']['url'], child['data']['title']) for child in data['data']['children']]
+    links = [ (child['data']['url'], child['data']['title'], child['data']['permalink']) for child in data['data']['children']]
 
     # Clean up links
     links = clean_yt(links)
@@ -239,6 +275,7 @@ if __name__ == '__main__':
     unseen_links = []
     # File for overiding mpv input.conf
     input_file = work_dir + "/input.conf"
+    tmp_input_file = work_dir + "/input.conf_tmp"
     # File for remembering links
     remember_file = work_dir + "/remember"
 
@@ -345,16 +382,18 @@ if __name__ == '__main__':
             save_links.remove(link)
             print("Reddytt: Links left: %i" % len(save_links))
         else:
+            tmp_input(work_dir, link, len(save_links))
             print("\nReddytt: Playing: %s\n" % link[1])
             p = subprocess.Popen(
                 [
                     'mpv',
                     link[0],
-                    '--input-conf=%s' % input_file,
+                    '--input-conf=%s' % tmp_input_file,
                     '--title=\"%s\"' % link[1]
                 ] + args.mpv
             , shell=False)
             p.communicate()
+            os.system("rm {}".format(tmp_input_file))
             # Separate mpv and reddytt output
             print("")
             # Print the link (useful for saving manually if mpv messed up output)
