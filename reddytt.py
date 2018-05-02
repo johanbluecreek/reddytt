@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -78,24 +78,14 @@ def create_input(work_dir):
     if os.path.isfile(input_file):
         backup_file = input_file + "-" + date.today().isoformat() + "-" + str(int(time.time()))
         print("Reddytt: Creating backup of old `input.conf`: %s" % backup_file)
-        os.system("cp {} {}".format(input_file, backup_file))
-    # Start creating the file
-    os.system("echo \"\" > %s" % input_file)
-    # Fill the file
-    ## Exits
-    # Remap '>' which is the default for next in playlist to trigger
-    # exit code to play next
-    os.system("echo \"> quit 0\" >> %s" % input_file)
-    # Remap 'q' to give an exit code to end this program.
-    os.system("echo \"q quit 4\" >> %s" % input_file)
-    # Map 'R' ro save link to the remember file (${path} and not ${filename} to get full URL)
-    os.system("echo \"R run \\\"/bin/bash\\\" \\\"-c\\\" \\\"echo \\\\\\\"\${title}: \${path}\\\\\\\" >> ~/.reddytt/remember\\\" \" >> %s" % input_file)
-    # uses bash and quotes around ${path} to sanitize possible injection
-    # cheers to https://stackoverflow.com/a/4273137
-    # Map 'i' to display title
-    os.system("echo \"i show-text \\\"\${title}\\\"\" >> %s" % input_file)
-    # Map 'Ctrl+o' to open link in browser
-    os.system("echo \"Ctrl+o run \\\"/bin/bash\\\" \\\"-c\\\" \\\"xdg-open \\\\\\\"\${path}\\\\\\\"\\\" \" >> %s" % input_file)
+        copyfile(input_file, backup_file)
+
+    with open(input_file, 'w') as f:
+        f.write('> quit 0\n')
+        f.write('q quit 4\n')
+        f.write('R run "/bin/bash" "-c" "echo \\\"${path}\\\" >> ~/.reddytt/remember"\n')
+        f.write('i show-text "${title}"\n')
+        f.write('Ctrl+o run "/bin/bash" "-c" "xdg-open \\\"${path}\\\""\n')
 
 
 ##### #    # #####          # #    # #####  #    # #####
@@ -121,17 +111,19 @@ def tmp_input(work_dir, link, num):
 
     # Add the extra mappings
     # Map 'Ctrl+r' to open Reddit-link in browser
-    map_string = ""
+    crtlr_string = ""
     try:
-        map_string = "echo \"Ctrl+r run \\\"/bin/bash\\\" \\\"-c\\\" \\\"xdg-open \\\\\\\"{}{}\\\\\\\"\\\" \" >> {}".format("https://www.reddit.com", link[2], tmp_file)
+        crtlr_string = 'Ctrl+r run "/bin/bash" "-c" "xdg-open \\\"{}{}\\\""\n'.format("https://www.reddit.com", link[2])
     except IndexError:
         print("Reddytt: Old link encountered.")
-        map_string = "echo \"Ctrl+r show-text \\\"Reddit link not available\\\"\" >> {}".format(tmp_file)
-    os.system(map_string)
-    # Map 'n' to show links-left number
-    map_string = "echo \"n show-text \\\"{}\\\"\" >> {}".format(str(num), tmp_file)
-    os.system(map_string)
+        crtlr_string = 'Ctrl+r show-text "Reddytt: Reddit link not available."\n'
 
+    # Map 'n' to show links-left number
+    n_string = 'n show-text "{}"\n'.format(str(num))
+
+    with open(tmp_file, 'a') as f:
+        f.write(crtlr_string)
+        f.write(n_string)
 
  ####  #      ######   ##   #    #         #   # #####
 #    # #      #       #  #  ##   #          # #    #
