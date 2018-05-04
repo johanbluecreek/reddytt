@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.4"
+__version__ = "1.4.5"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
     ### Resolve arguments ###
 
-    parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv-arguments]]', description='Play the youtube links/twitch clips from your favourite subreddit.')
+    parser = ap.ArgumentParser(usage='%(prog)s [options] <subreddit> [-- [mpv]]', description='Play the video links from your favourite subreddit.')
 
     # Optional arguemnts
     parser.add_argument('--depth', metavar='d', type=int, default=0, help='How many pages into the subreddit you want to go. (`0` is frontpage, each positive number another page after that. Negative will not fetch new links at all.)')
@@ -224,6 +224,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     subreddit = args.subreddit
+    if subreddit == None:
+        print("Reddytt: No subreddit given, exiting. Try `reddytt --help`.")
+        sys.exit()
+
     depth = args.depth
     gen_input = args.gen_input
 
