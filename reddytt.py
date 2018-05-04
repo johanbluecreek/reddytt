@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.5"
+__version__ = "1.4.6"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -226,6 +226,10 @@ if __name__ == '__main__':
     subreddit = args.subreddit
     if subreddit == None:
         print("Reddytt: No subreddit given, exiting. Try `reddytt --help`.")
+        sys.exit()
+
+    if "?" in subreddit:
+        print("Reddytt: Are you trying to manipulate the Reddit-api call? Stop that!")
         sys.exit()
 
     depth = args.depth
