@@ -49,11 +49,3 @@ If you update reddytt, meaning you run reddytt and it may not be the same versio
 $ ./reddytt.py --gen-input
 ```
 to get the latest input file so that the key maps work as intended.
-
-## Supported sites
-
-The following domains are supported by `reddytt.py`
-
- * `youtu.be`
- * `youtube.com/watch`
- * `clips.twitch.tv`

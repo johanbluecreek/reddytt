@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -52,11 +52,6 @@ from shutil import copyfile
       #       #     # #    ## #     #    #     #  #     # #    ## #     #
       #        #####  #     #  #####     #    ### ####### #     #  #####
 ################################################################################
-
-# Function to flatten a list
-flatten = lambda l: [item for sublist in l for item in sublist]
-# cheers to https://stackoverflow.com/a/952952
-
 
  ####  #####  ######   ##   ##### ######         # #    # #####  #    # #####
 #    # #    # #       #  #    #   #              # ##   # #    # #    #   #
