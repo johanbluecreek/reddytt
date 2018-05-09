@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.6"
+__version__ = "1.4.7"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -146,7 +146,10 @@ def clean_yt(link_list):
                 print('Reddytt: skipping URL without video label:', link)
                 continue
             # Add the cleaned up link
-            new_list.append(('https://www.youtube.com/watch?v=' + videolabel, link[1]))
+            try:
+                new_list.append(('https://www.youtube.com/watch?v=' + videolabel, link[1], link[2]))
+            except IndexError:
+                new_list.append(('https://www.youtube.com/watch?v=' + videolabel, link[1]))
         else:
             # Or just add the original link if not youtube
             new_list.append(link)
@@ -224,16 +227,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     subreddit = args.subreddit
-    if subreddit == None:
-        print("Reddytt: No subreddit given, exiting. Try `reddytt --help`.")
-        sys.exit()
-
-    if "?" in subreddit:
-        print("Reddytt: Are you trying to manipulate the Reddit-api call? Stop that!")
-        sys.exit()
 
     depth = args.depth
     gen_input = args.gen_input
+
+    if subreddit == None and not gen_input:
+        print("Reddytt: No subreddit given, exiting. Try `reddytt --help`.")
+        sys.exit()
+
+    if not subreddit == None:
+        if "?" in subreddit:
+            print("Reddytt: Are you trying to manipulate the Reddit-api call? Stop that!")
+            sys.exit()
+
+
 
             #                                       ##
             #    ###### # #      ######  ####      #  #      #####  # #####
