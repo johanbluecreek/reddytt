@@ -13,7 +13,7 @@
 #   reddytt.py
 #   https://github.com/johanbluecreek/reddytt
 #
-__version__ = "1.4.7"
+__version__ = "1.4.8"
 user_agent = "Reddytt v{}".format(__version__)
 #
 ################################################################################
@@ -78,7 +78,7 @@ def create_input(work_dir):
     with open(input_file, 'w') as f:
         f.write('> quit 0\n')
         f.write('q quit 4\n')
-        f.write('R run "/bin/bash" "-c" "echo \\\"${path}\\\" >> ~/.reddytt/remember"\n')
+        f.write('R run "/bin/bash" "-c" "echo \\\"${title}: ${path}\\\" >> ~/.reddytt/remember"\n')
         f.write('i show-text "${title}"\n')
         f.write('Ctrl+o run "/bin/bash" "-c" "xdg-open \\\"${path}\\\""\n')
 
@@ -391,7 +391,7 @@ if __name__ == '__main__':
                     'mpv',
                     link[0],
                     '--input-conf=%s' % tmp_input_file,
-                    '--title=\"%s\"' % link[1]
+                    '--title=%s' % link[1].replace('"',"'")
                 ] + args.mpv
             , shell=False)
             p.communicate()
