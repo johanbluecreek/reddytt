@@ -254,6 +254,8 @@ if __name__ == '__main__':
 
     # Setup working directory
     work_dir = os.environ['HOME'] + "/.reddytt"
+    if not os.path.isdir(work_dir):
+        os.mkdir(work_dir)
 
     # New optional flag triggers input.conf generation, or if the file does not exists.
     if gen_input:
